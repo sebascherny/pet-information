@@ -1,4 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+// Empty string uses same-origin /api (nginx or Vite dev proxy) for Safari-compatible cookies.
+const API_URL = import.meta.env.VITE_API_URL ?? "";
 
 async function request<T>(
   path: string,

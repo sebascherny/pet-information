@@ -7,19 +7,18 @@ RUN npm ci
 
 COPY . .
 
-ARG VITE_API_URL
+ARG VITE_API_URL=
 ENV VITE_API_URL=$VITE_API_URL
 
 RUN npm run build
 
-FROM node:20-alpine
+FROM nginx:alpine
 
-WORKDIR /app
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
-RUN npm install -g serve
+EXPOSE 8080
 
-COPY --from=build /app/dist ./dist
-
-EXPOSE 3000
-
-CMD ["sh", "-c", "serve -s dist -l ${PORT:-3000}"]
+ENTRYPOINT ["/docker-entrypoint.sh"]

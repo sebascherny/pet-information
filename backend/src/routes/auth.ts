@@ -11,11 +11,11 @@ function getCookieOptions() {
   const isLocalDev =
     frontendUrl.includes("localhost") || frontendUrl.includes("127.0.0.1");
 
-  // Cross-origin deploys (e.g. separate Railway services) require SameSite=None.
+  // Same-origin /api proxy (frontend nginx) keeps cookies first-party for Safari.
   return {
     httpOnly: true,
     secure: !isLocalDev,
-    sameSite: isLocalDev ? ("lax" as const) : ("none" as const),
+    sameSite: "lax" as const,
     maxAge: 7 * 24 * 60 * 60 * 1000,
   };
 }
