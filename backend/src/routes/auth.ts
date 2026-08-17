@@ -6,12 +6,19 @@ import { authMiddleware, AuthRequest } from "../middleware/auth";
 
 const router = Router();
 
-const COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as const,
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-};
+function getCookieOptions() {
+  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+  const isLocalDev =
+    frontendUrl.includes("localhost") || frontendUrl.includes("127.0.0.1");
+
+  // Cross-origin deploys (e.g. separate Railway services) require SameSite=None.
+  return {
+    httpOnly: true,
+    secure: !isLocalDev,
+    sameSite: isLocalDev ? ("lax" as const) : ("none" as const),
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  };
+}
 
 router.post("/register", async (req, res: Response) => {
   const { name, username, email, password } = req.body;
@@ -42,7 +49,7 @@ router.post("/register", async (req, res: Response) => {
       { expiresIn: "7d" }
     );
 
-    res.cookie("token", token, COOKIE_OPTIONS);
+    res.cookie("token", token, getCookieOptions());
     res.status(201).json({ user });
   } catch (err: unknown) {
     const pgErr = err as { code?: string };
@@ -88,7 +95,7 @@ router.post("/login", async (req, res: Response) => {
       { expiresIn: "7d" }
     );
 
-    res.cookie("token", token, COOKIE_OPTIONS);
+    res.cookie("token", token, getCookieOptions());
     res.json({
       user: {
         id: user.id,
@@ -105,7 +112,7 @@ router.post("/login", async (req, res: Response) => {
 });
 
 router.post("/logout", (_req, res: Response) => {
-  res.clearCookie("token", COOKIE_OPTIONS);
+  res.clearCookie("token", getCookieOptions());
   res.json({ message: "Logged out" });
 });
 
